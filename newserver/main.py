@@ -1,9 +1,11 @@
 import multiprocessing
+from flask_cors import CORS
 from server import app
 from ml_pipeline import run_ml_operations
 
 def run_server():
-    app.run(host='0.0.0.0', port=5050)
+    CORS(app)
+    app.run(host='192.168.112.118', port=5050)
 
 if __name__ == '__main__':
     print("Starting server and ML processes...")

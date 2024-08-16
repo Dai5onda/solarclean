@@ -4,6 +4,7 @@ import cv2
 from tinydb import TinyDB, Query, where
 from datetime import datetime
 from itertools import groupby
+import uuid
 
 ORIGINAL_DB_PATH ='db.json'
 PROCESSED_DB_PATH = 'processed_image_metadata.json'
@@ -18,6 +19,7 @@ original_db = TinyDB(ORIGINAL_DB_PATH)
 processed_db = TinyDB(PROCESSED_DB_PATH)
 metadata_table = original_db.table('metadata')
 processed_table = processed_db.table('processed_metadata')
+ml_output_table = processed_db.table('ml_output')
 
 def process_image(image_path):
     print(f"Attempting to process image: {image_path}")
@@ -32,8 +34,14 @@ def process_image(image_path):
             print(f"Error: Failed to read image: {image_path}")
             return None
         
-        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        return gray_img
+        # TODO: Replace this with your ML pipeline
+        # This is where you should put your ML pipeline code
+        # For example:
+        # processed_img = your_ml_model.predict(img)
+        # For now, we'll just convert to grayscale as a placeholder
+        processed_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
+        return processed_img
     except Exception as e:
         print(f"Error processing image {image_path}: {str(e)}")
         return None

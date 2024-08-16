@@ -1,11 +1,13 @@
 import os
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 from tinydb import TinyDB, Query
 from datetime import datetime
+from api_routes import api
+import uuid
 
 app = Flask(__name__)
-
+app = Flask(__name__, static_folder='storage/processedimage', static_url_path='/images')
 # Configuration
 UPLOAD_FOLDER = 'storage/originalimage'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -15,6 +17,23 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = TinyDB(DB_PATH)
 metadata_table = db.table('metadata')
 config_table = db.table('config')
+
+# Initialize new tables if they don't exist
+dashboard_table = db.table('dashboard')
+schedule_table = db.table('schedule')
+ml_output_table = db.table('ml_output')
+
+# Initialize dashboard data if it doesn't exist
+if not dashboard_table.all():
+    dashboard_table.insert({
+        "isCleanerOn": False,
+        "isActive": False,
+        "onOffHistory": [],
+        "lastCleaningTime": None,
+        "imagesCaptured": 0
+    })
+
+app.register_blueprint(api, url_prefix='/api')
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -68,3 +87,18 @@ def upload_batch():
         "batch_id": batch_id,
         "files": uploaded_files
     }), 200
+
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({"error": "Not found"}), 404
+
+@app.errorhandler(500)
+def server_error(error):
+    return jsonify({"error": "Internal server error"}), 500
+
+@app.route('/images/<path:filename>')
+def serve_image(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+if __name__ == '__main__':
+    app.run(debug=True)
